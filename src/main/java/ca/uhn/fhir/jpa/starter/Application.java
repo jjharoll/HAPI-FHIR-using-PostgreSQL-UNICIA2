@@ -22,62 +22,61 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.DispatcherServlet;
 import ca.uhn.fhir.interceptor.api.IInterceptorService;
 
-@ServletComponentScan(basePackageClasses = {
-  JpaRestfulServer.class})
+@ServletComponentScan(basePackageClasses = {JpaRestfulServer.class})
 @SpringBootApplication(exclude = {ElasticsearchRestClientAutoConfiguration.class})
 @Import({SubscriptionSubmitterConfig.class, SubscriptionProcessorConfig.class, SubscriptionChannelConfig.class, WebsocketDispatcherConfig.class, MdmConfig.class})
 public class Application extends SpringBootServletInitializer {
 
-  public static void main(String[] args) {
-      SpringApplication.run(Application.class, args);
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
 
-      // Server is now accessible at eg. http://192.168.162.23:8080/fhir/metadata
-      // UI is now accessible at http://192.168.162.23:8080/
-  }
+    @Autowired
+    private IInterceptorService interceptorService;
 
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-      return builder.sources(Application.class);
-  }
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
 
-  @Autowired
-  AutowireCapableBeanFactory beanFactory;
+        //Server is now accessible at eg. http://192.168.162.23:8080/fhir/metadata
+        //UI is now accessible at http://192.168.162.23:8080/
+    }
 
-  @Autowired
-  private IInterceptorService interceptorService;
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(Application.class);
+    }
 
-  @Bean
-  @Conditional(OnEitherVersion.class)
-  public ServletRegistrationBean hapiServletRegistration() {
-      ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean();
-      JpaRestfulServer jpaRestfulServer = new JpaRestfulServer();
-      beanFactory.autowireBean(jpaRestfulServer);
-      servletRegistrationBean.setServlet(jpaRestfulServer);
-      servletRegistrationBean.addUrlMappings("/fhir/*");
-      servletRegistrationBean.setLoadOnStartup(1);
+    @Bean
+    @Conditional(OnEitherVersion.class)
+    public ServletRegistrationBean hapiServletRegistration() {
+        ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean();
+        JpaRestfulServer jpaRestfulServer = new JpaRestfulServer();
+        beanFactory.autowireBean(jpaRestfulServer);
+        servletRegistrationBean.setServlet(jpaRestfulServer);
+        servletRegistrationBean.addUrlMappings("/fhir/*");
+        servletRegistrationBean.setLoadOnStartup(1);
+        return servletRegistrationBean;
+    }
 
-      return servletRegistrationBean;
-  }
+    @Bean
+    public ServletRegistrationBean overlayRegistrationBean() {
+        AnnotationConfigWebApplicationContext annotationConfigWebApplicationContext = new AnnotationConfigWebApplicationContext();
+        annotationConfigWebApplicationContext.register(FhirTesterConfig.class);
 
-  @Bean
-  public ServletRegistrationBean overlayRegistrationBean() {
-      AnnotationConfigWebApplicationContext annotationConfigWebApplicationContext = new AnnotationConfigWebApplicationContext();
-      annotationConfigWebApplicationContext.register(FhirTesterConfig.class);
+        DispatcherServlet dispatcherServlet = new DispatcherServlet(annotationConfigWebApplicationContext);
+        dispatcherServlet.setContextClass(AnnotationConfigWebApplicationContext.class);
+        dispatcherServlet.setContextConfigLocation(FhirTesterConfig.class.getName());
 
-      DispatcherServlet dispatcherServlet = new DispatcherServlet(annotationConfigWebApplicationContext);
-      dispatcherServlet.setContextClass(AnnotationConfigWebApplicationContext.class);
-      dispatcherServlet.setContextConfigLocation(FhirTesterConfig.class.getName());
+        ServletRegistrationBean registrationBean = new ServletRegistrationBean();
+        registrationBean.setServlet(dispatcherServlet);
+        registrationBean.addUrlMappings("/*");
+        registrationBean.setLoadOnStartup(1);
+        return registrationBean;
+    }
 
-      ServletRegistrationBean registrationBean = new ServletRegistrationBean();
-      registrationBean.setServlet(dispatcherServlet);
-      registrationBean.addUrlMappings("/*");
-      registrationBean.setLoadOnStartup(1);
-      return registrationBean;
-  }
-
-  @Bean
-  public void registerCustomIdValidationInterceptor() {
-      CustomIdValidationInterceptor customIdValidationInterceptor = new CustomIdValidationInterceptor();
-      interceptorService.registerInterceptor(customIdValidationInterceptor);
-  }
+    @Bean
+    public CustomIdValidationInterceptor customIdValidationInterceptor() {
+        CustomIdValidationInterceptor interceptor = new CustomIdValidationInterceptor();
+        interceptorService.registerInterceptor(interceptor);
+        return interceptor;
+    }
 }
