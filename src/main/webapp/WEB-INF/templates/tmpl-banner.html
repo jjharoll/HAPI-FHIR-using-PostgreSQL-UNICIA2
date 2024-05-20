@@ -3,7 +3,7 @@
 <div th:fragment="banner">
     <div class="row">
         <div class="col-md-8">
-            <img id="logo" src="img/sample-logo.jpg" width="383" alt="Sample Logo"/>
+            <img id="logo" src="img/sample.jpg" width="383" alt="Sample Logo"/>
         </div>
         <div class="col-md-4">
             <img src="img/hapi_fhir_banner_right.png" align="right"/>
@@ -11,31 +11,29 @@
     </div>
 
     <script>
-        const customlogoImageUrl = "content/custom/logo.jpg"; // Custom logo
+        const customLogoImageUrl = "content/custom/sample.jpg"; // Custom logo
         const defaultLogoImageUrl = "img/sample.jpg"; // Default logo
         const logoImageElement = document.getElementById("logo");
 
         // Check if the logo image is available
         const logoImg = new Image();
-        logoImg.src = customlogoImageUrl;
+        logoImg.src = customLogoImageUrl;
 
         logoImg.onload = function() {
             // Logo image is available
-            logoImageElement.src = customlogoImageUrl;
+            logoImageElement.src = customLogoImageUrl;
         };
 
         logoImg.onerror = function() {
             // Logo image is not available, use the default logo image
             logoImageElement.src = defaultLogoImageUrl;
         };
-
-
     </script>
+
     <!-- Error banner in case anything went wrong -->
     <div class="alert  alert-danger alert-dismissable" th:if="${errorMsg} != null">
         <strong>Warning!</strong>
         <p th:text="${errorMsg}"></p>
     </div>
-
 </div>
 </html>
