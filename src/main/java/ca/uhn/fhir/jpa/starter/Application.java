@@ -35,9 +35,6 @@ public class Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-
-        //Server is now accessible at eg. http://192.168.162.23:8080/fhir/metadata
-        //UI is now accessible at http://192.168.162.23:8080/
     }
 
     @Override
