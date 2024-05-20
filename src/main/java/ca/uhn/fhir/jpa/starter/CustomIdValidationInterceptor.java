@@ -30,6 +30,7 @@ public class CustomIdValidationInterceptor extends ServerOperationInterceptorAda
 
     private void validateId(RequestDetails theRequestDetails, IBaseResource theResource) {
         String id = theResource.getIdElement().getIdPart();
+        System.out.println("Validating ID: " + id); // Agrega este registro
         if (id.matches("\\d+")) {
             throw new InvalidRequestException("IDs cannot be fully numeric: " + id);
         }
